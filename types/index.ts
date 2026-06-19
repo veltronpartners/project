@@ -164,6 +164,175 @@ export interface EngagementNote {
   updated_at: string;
 }
 
+export interface Meeting {
+  id: string;
+  title: string;
+  meeting_type: "portfolio_checkin" | "internal" | "external" | "board" | null;
+  date: string;
+  duration_minutes: number | null;
+  location: string | null;
+  google_meet_link: string | null;
+  google_calendar_event_id: string | null;
+  portfolio_id: string | null;
+  project_id: string | null;
+  organiser_id: string | null;
+  attendees: string[] | null;
+  external_attendees: string | null;
+  agenda: string | null;
+  key_decisions: string | null;
+  action_items: string | null;
+  next_meeting: string | null;
+  notes: string | null;
+  status: "scheduled" | "completed" | "cancelled";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  priority: "urgent" | "normal" | "info";
+  posted_by: string | null;
+  target_roles: string[] | null;
+  slack_posted: boolean;
+  pinned: boolean;
+  expires_at: string | null;
+  status: "pending" | "published" | "declined";
+  created_at: string;
+}
+
+export interface VaultDocument {
+  id: string;
+  title: string;
+  category:
+    | "engagement"
+    | "due_diligence"
+    | "legal"
+    | "financial"
+    | "hr"
+    | "templates"
+    | "policies"
+    | "reports"
+    | null;
+  description: string | null;
+  file_url: string | null;
+  gdrive_file_id: string | null;
+  file_type: string | null;
+  file_size_kb: number | null;
+  portfolio_id: string | null;
+  project_id: string | null;
+  engagement_id: string | null;
+  uploaded_by: string | null;
+  version: string;
+  access_level: "internal" | "director_only" | "hr_only" | "compliance_only";
+  tags: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Contact {
+  id: string;
+  full_name: string;
+  organisation: string | null;
+  role_title: string | null;
+  contact_type:
+    | "portfolio_contact"
+    | "investor"
+    | "advisor"
+    | "legal"
+    | "partner"
+    | "vendor"
+    | "other"
+    | null;
+  email: string | null;
+  phone: string | null;
+  linkedin_url: string | null;
+  website: string | null;
+  portfolio_id: string | null;
+  status: "active" | "inactive" | "archived";
+  last_contact: string | null;
+  notes: string | null;
+  added_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InternalProject {
+  id: string;
+  name: string;
+  type: "product_build" | "design" | "systems" | "other" | null;
+  scale: "small" | "medium" | "large" | null;
+  status: "planning" | "in_progress" | "completed" | "on_hold" | "cancelled";
+  lead_id: string | null;
+  team_members: string[] | null;
+  start_date: string | null;
+  target_end_date: string | null;
+  percent_complete: number;
+  budget_estimated: number | null;
+  budget_used: number;
+  currency: string;
+  budget_approved: boolean;
+  in_scope: string | null;
+  out_of_scope: string | null;
+  success_criteria: string | null;
+  top_priority: string | null;
+  key_risk: string | null;
+  health_indicator: HealthIndicator | null;
+  linked_portfolio_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectMilestone {
+  id: string;
+  project_id: string;
+  title: string;
+  target_date: string | null;
+  status: "pending" | "in_progress" | "complete" | "delayed";
+  notes: string | null;
+}
+
+export interface ProjectTask {
+  id: string;
+  project_id: string;
+  title: string;
+  assignee_id: string | null;
+  priority: "high" | "medium" | "low" | null;
+  due_date: string | null;
+  status: "pending" | "in_progress" | "complete" | "overdue";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectBudgetItem {
+  id: string;
+  project_id: string;
+  item_name: string;
+  category: string | null;
+  vendor: string | null;
+  estimated: number | null;
+  actual: number | null;
+  currency: string;
+  date: string | null;
+  notes: string | null;
+}
+
+export interface ProjectRisk {
+  id: string;
+  project_id: string;
+  description: string;
+  type: "risk" | "decision";
+  likelihood: "high" | "medium" | "low" | null;
+  impact: "high" | "medium" | "low" | null;
+  mitigation: string | null;
+  owner_id: string | null;
+  status: "open" | "mitigated" | "resolved" | "accepted";
+  linked_decision_id: string | null;
+}
+
 export type DecisionStatus =
   | "approved"
   | "in_progress"

@@ -58,4 +58,26 @@ export async function applyApprovalDecision(params: {
       resourceName: engagement.company_name,
     });
   }
+
+  if (params.category === "announcement" && params.resourceType === "announcement") {
+    const { data: announcement } = await supabase
+      .from("announcements")
+      .select("title")
+      .eq("id", params.resourceId)
+      .maybeSingle();
+    if (!announcement) return;
+
+    await supabase
+      .from("announcements")
+      .update({ status: params.decision === "approved" ? "published" : "declined" })
+      .eq("id", params.resourceId);
+
+    await logAudit({
+      actorId: params.decidedBy,
+      action: params.decision === "approved" ? "approved" : "declined",
+      resourceType: "announcement",
+      resourceId: params.resourceId,
+      resourceName: announcement.title,
+    });
+  }
 }
