@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /**
@@ -23,26 +24,17 @@ export function VeltronMark({ className }: { className?: string }) {
   );
 }
 
-export function VeltronLogo({
-  className,
-  markClassName,
-}: {
-  className?: string;
-  markClassName?: string;
-}) {
+export function VeltronLogo({ className }: { className?: string }) {
   return (
-    <div className={cn("flex items-center gap-3", className)}>
-      <VeltronMark className={markClassName} />
-      <div className="flex flex-col leading-none">
-        <span className="font-display text-2xl font-bold text-veltron-charcoal">
-          VELTRON
-        </span>
-        <span className="flex items-center gap-2 text-xs font-semibold tracking-[0.3em] text-veltron-gold">
-          <span className="h-px w-3 bg-veltron-gold" />
-          PARTNERS
-          <span className="h-px w-3 bg-veltron-gold" />
-        </span>
-      </div>
+    <div className={cn("relative h-16 w-64", className)}>
+      <Image
+        src="/veltron-logo.jpg"
+        alt="Veltron Partners"
+        fill
+        priority
+        className="object-contain"
+        sizes="256px"
+      />
     </div>
   );
 }

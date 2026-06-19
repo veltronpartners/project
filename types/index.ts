@@ -188,6 +188,29 @@ export interface Meeting {
   updated_at: string;
 }
 
+export interface MailboxConnection {
+  id: string;
+  user_id: string;
+  email_address: string;
+  is_shared: boolean;
+  imap_host: string;
+  imap_port: number;
+  smtp_host: string;
+  smtp_port: number;
+  is_connected: boolean;
+  last_connection_check: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SharedMailboxAccess {
+  id: string;
+  mailbox_email: string;
+  user_id: string;
+  granted_by: string | null;
+  granted_at: string;
+}
+
 export interface KbArticle {
   id: string;
   title: string;
