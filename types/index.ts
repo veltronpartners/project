@@ -188,6 +188,53 @@ export interface Meeting {
   updated_at: string;
 }
 
+export interface StaffProfile {
+  id: string;
+  user_id: string;
+  employment_type: "full_time" | "part_time" | "contractor" | "advisor" | null;
+  start_date: string | null;
+  end_date: string | null;
+  contract_status: "active" | "pending_renewal" | "expired";
+  contract_file_url: string | null;
+  reporting_to: string | null;
+  remuneration: string | null;
+  performance_notes: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  timezone: string | null;
+  location_country: string | null;
+  onboarding_complete: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OnboardingTask {
+  id: string;
+  user_id: string;
+  task_name: string;
+  category: "admin" | "system_access" | "training" | "introductions" | null;
+  status: "pending" | "in_progress" | "complete";
+  due_date: string | null;
+  completed_at: string | null;
+  assigned_to: string | null;
+  notes: string | null;
+}
+
+export interface LeaveRequest {
+  id: string;
+  user_id: string;
+  leave_type: "annual" | "sick" | "personal" | "unpaid" | "other" | null;
+  start_date: string;
+  end_date: string;
+  days_count: number | null;
+  reason: string | null;
+  status: "pending" | "approved" | "declined";
+  approved_by: string | null;
+  approved_at: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface Announcement {
   id: string;
   title: string;
@@ -394,7 +441,8 @@ export interface Notification {
     | "decision_logged"
     | "announcement"
     | "leave_request"
-    | "flagged_item";
+    | "flagged_item"
+    | "approval_pending";
   title: string;
   message: string | null;
   link: string | null;

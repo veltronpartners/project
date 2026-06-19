@@ -9,6 +9,7 @@ import { logAudit } from "@/lib/audit";
 import { canEdit } from "@/lib/permissions";
 import { routeApproval } from "@/lib/approvals/policy-engine";
 import { applyApprovalDecision } from "@/lib/approvals/apply";
+import { notifyMany } from "@/lib/notifications";
 
 export type FormState = { error?: string } | undefined;
 
@@ -174,6 +175,25 @@ export async function signOffStage(
     resourceId: engagementId,
     newValue: { stage, remarks },
   });
+
+  const { data: engagementForNotify } = await supabase
+    .from("engagements")
+    .select("company_name, officer_id, lead_id")
+    .eq("id", engagementId)
+    .maybeSingle();
+  if (engagementForNotify) {
+    await notifyMany(
+      [engagementForNotify.officer_id, engagementForNotify.lead_id].filter(
+        (id): id is string => Boolean(id) && id !== user.id,
+      ),
+      {
+        type: "stage_signoff",
+        title: `Stage ${stage} signed off — ${engagementForNotify.company_name}`,
+        message: `${user.full_name} signed off Stage ${stage}.`,
+        link: `/intake/${engagementId}/stage/${nextStage}`,
+      },
+    );
+  }
 
   revalidatePath(`/intake/${engagementId}`);
   redirect(stage < 6 ? `/intake/${engagementId}/stage/${nextStage}` : `/intake/${engagementId}/stage/6`);

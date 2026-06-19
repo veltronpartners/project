@@ -1,8 +1,7 @@
-import { Bell } from "lucide-react";
-import type { User } from "@/types";
+import type { Notification, User } from "@/types";
 import { ROLE_LABELS } from "@/types";
 import { signOut } from "@/lib/auth/actions";
-import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/shared/NotificationBell";
 import {
   Avatar,
   AvatarFallback,
@@ -25,16 +24,14 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export function Topbar({ user }: { user: User }) {
+export function Topbar({ user, notifications }: { user: User; notifications: Notification[] }) {
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
       <div className="text-sm text-text-muted">
         {ROLE_LABELS[user.role]}
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" aria-label="Notifications">
-          <Bell className="h-5 w-5" />
-        </Button>
+        <NotificationBell notifications={notifications} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-full outline-none">

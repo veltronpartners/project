@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { createNotification } from "@/lib/notifications";
 
 export type ApprovalCategory =
   | "engagement_decision"
@@ -108,6 +109,14 @@ export async function routeApproval(params: {
   if (error || !request) {
     throw new Error("Couldn't create the approval request: " + (error?.message ?? "unknown error"));
   }
+
+  await createNotification({
+    userId: routedTo,
+    type: "approval_pending",
+    title: "Approval needed",
+    message: params.summary,
+    link: `/approvals/${request.id}`,
+  });
 
   return { autoApproved: false, requestId: request.id, routedTo };
 }

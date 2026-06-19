@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
+import { notifyMany } from "@/lib/notifications";
 
 /**
  * Finalizes the underlying resource once a Director/Acting CEO/delegated
@@ -79,5 +80,17 @@ export async function applyApprovalDecision(params: {
       resourceId: params.resourceId,
       resourceName: announcement.title,
     });
+
+    if (params.decision === "approved") {
+      const { data: staff } = await supabase.from("users").select("id").eq("is_active", true);
+      await notifyMany(
+        (staff ?? []).map((s) => s.id),
+        {
+          type: "announcement",
+          title: announcement.title,
+          link: "/announcements",
+        },
+      );
+    }
   }
 }

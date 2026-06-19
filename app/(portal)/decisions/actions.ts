@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentStaffUser } from "@/lib/auth/dal";
 import { logAudit } from "@/lib/audit";
 import { canEdit } from "@/lib/permissions";
+import { createNotification } from "@/lib/notifications";
 
 export type FormState = { error?: string } | undefined;
 
@@ -47,6 +48,8 @@ export async function createDecision(
     return { error: parsed.error.issues[0]?.message ?? "Check the form for errors." };
   }
 
+  const ownerId = emptyToNull(formData.get("owner_id")) ?? user.id;
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("decisions")
@@ -62,10 +65,10 @@ export async function createDecision(
       stakeholders_informed: emptyToNull(formData.get("stakeholders_informed")),
       status: emptyToNull(formData.get("status")) ?? "in_progress",
       due_date: emptyToNull(formData.get("due_date")),
-      owner_id: emptyToNull(formData.get("owner_id")) ?? user.id,
+      owner_id: ownerId,
       review_date: emptyToNull(formData.get("review_date")),
     })
-    .select("id")
+    .select("id, log_id")
     .single();
 
   if (error || !data) {
@@ -80,6 +83,16 @@ export async function createDecision(
     resourceName: parsed.data.decision_summary,
     newValue: parsed.data,
   });
+
+  if (ownerId !== user.id) {
+    await createNotification({
+      userId: ownerId,
+      type: "decision_logged",
+      title: `${data.log_id} — you're listed as owner`,
+      message: parsed.data.decision_summary,
+      link: `/decisions/${data.id}`,
+    });
+  }
 
   revalidatePath("/decisions");
   redirect(`/decisions/${data.id}`);
