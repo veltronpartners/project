@@ -188,6 +188,21 @@ export interface Meeting {
   updated_at: string;
 }
 
+export interface KbArticle {
+  id: string;
+  title: string;
+  category: "policy" | "sop" | "guide" | "template" | "faq" | null;
+  body: string | null;
+  notion_page_id: string | null;
+  author_id: string | null;
+  last_edited_by: string | null;
+  tags: string[] | null;
+  is_published: boolean;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ConflictEntry {
   id: string;
   reported_by: string | null;
