@@ -188,6 +188,80 @@ export interface Meeting {
   updated_at: string;
 }
 
+export interface ConflictEntry {
+  id: string;
+  reported_by: string | null;
+  conflict_type: "financial" | "personal" | "professional" | "other" | null;
+  description: string;
+  parties_involved: string | null;
+  related_portfolio_id: string | null;
+  related_engagement_id: string | null;
+  status: "open" | "under_review" | "resolved" | "noted";
+  resolution: string | null;
+  resolved_at: string | null;
+  reviewed_by: string | null;
+  created_at: string;
+}
+
+export interface Contract {
+  id: string;
+  contract_type:
+    | "engagement_letter"
+    | "mou"
+    | "nda"
+    | "service_agreement"
+    | "employment"
+    | "vendor"
+    | "other"
+    | null;
+  title: string;
+  counterparty: string | null;
+  portfolio_id: string | null;
+  signed_date: string | null;
+  effective_date: string | null;
+  expiry_date: string | null;
+  renewal_date: string | null;
+  status: "draft" | "pending_signature" | "active" | "expired" | "terminated";
+  signed_by_veltron: string | null;
+  file_url: string | null;
+  gdrive_file_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FinanceBudget {
+  id: string;
+  name: string;
+  period_start: string | null;
+  period_end: string | null;
+  total_budget: number | null;
+  currency: string;
+  approved: boolean;
+  approved_by: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface Expense {
+  id: string;
+  budget_id: string | null;
+  project_id: string | null;
+  portfolio_id: string | null;
+  submitted_by: string | null;
+  category: "operations" | "travel" | "legal" | "marketing" | "payroll" | "other" | null;
+  description: string;
+  amount: number;
+  currency: string;
+  date: string | null;
+  receipt_url: string | null;
+  status: "pending" | "approved" | "declined" | "reimbursed";
+  approved_by: string | null;
+  approved_at: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface StaffProfile {
   id: string;
   user_id: string;
