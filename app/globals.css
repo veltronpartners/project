@@ -1,26 +1,172 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-inter);
+  --font-display: var(--font-lora);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Veltron brand tokens (Spec Section 6.1) — used directly as bg-success, text-veltron-gold, etc. */
+  --color-veltron-charcoal: var(--veltron-charcoal);
+  --color-veltron-charcoal-light: var(--veltron-charcoal-light);
+  --color-veltron-gold: var(--veltron-gold);
+  --color-veltron-gold-light: var(--veltron-gold-light);
+  --color-veltron-gold-muted: var(--veltron-gold-muted);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-text-muted: var(--text-muted);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Veltron brand palette — sampled directly from the logo (Spec Section 6.1) */
+  --veltron-charcoal: #34331f;
+  --veltron-charcoal-light: #4a4830;
+  --veltron-gold: #e3a31d;
+  --veltron-gold-light: #edb12d;
+  --veltron-gold-muted: #f6dfa8;
+  --success: #3f8f5f;
+  --success-foreground: #fafaf5;
+  --warning: #d89a2e;
+  --warning-foreground: #2a2206;
+  --danger: #b3413a;
+  --danger-foreground: #fafaf5;
+  --text-muted: #6b6a57;
+
+  --background: #faf8f3;
+  --foreground: #222117;
+  --card: #ffffff;
+  --card-foreground: #222117;
+  --popover: #ffffff;
+  --popover-foreground: #222117;
+  --primary: #e3a31d;
+  --primary-foreground: #222117;
+  --secondary: #34331f;
+  --secondary-foreground: #faf8f3;
+  --muted: #f1ede0;
+  --muted-foreground: #6b6a57;
+  --accent: #f6dfa8;
+  --accent-foreground: #34331f;
+  --destructive: #b3413a;
+  --border: #e8e3d6;
+  --input: #e8e3d6;
+  --ring: #e3a31d;
+  --chart-1: #3f8f5f;
+  --chart-2: #d89a2e;
+  --chart-3: #b3413a;
+  --chart-4: #e3a31d;
+  --chart-5: #34331f;
+  --radius: 0.5rem;
+  --sidebar: #34331f;
+  --sidebar-foreground: #faf8f3;
+  --sidebar-primary: #e3a31d;
+  --sidebar-primary-foreground: #222117;
+  --sidebar-accent: #4a4830;
+  --sidebar-accent-foreground: #faf8f3;
+  --sidebar-border: #4a4830;
+  --sidebar-ring: #e3a31d;
+}
+
+.dark {
+  --veltron-charcoal: #34331f;
+  --veltron-charcoal-light: #4a4830;
+  --veltron-gold: #e3a31d;
+  --veltron-gold-light: #edb12d;
+  --veltron-gold-muted: #4a4830;
+  --success: #4fab76;
+  --success-foreground: #0c1f13;
+  --warning: #e3a31d;
+  --warning-foreground: #2a2206;
+  --danger: #c75c54;
+  --danger-foreground: #fafaf5;
+  --text-muted: #b8b59a;
+
+  --background: #1c1b12;
+  --foreground: #f6f4ea;
+  --card: #272619;
+  --card-foreground: #f6f4ea;
+  --popover: #272619;
+  --popover-foreground: #f6f4ea;
+  --primary: #e3a31d;
+  --primary-foreground: #1c1b12;
+  --secondary: #4a4830;
+  --secondary-foreground: #f6f4ea;
+  --muted: #34331f;
+  --muted-foreground: #b8b59a;
+  --accent: #4a4830;
+  --accent-foreground: #f6dfa8;
+  --destructive: #c75c54;
+  --border: #3d3b27;
+  --input: #3d3b27;
+  --ring: #e3a31d;
+  --chart-1: #4fab76;
+  --chart-2: #e3a31d;
+  --chart-3: #c75c54;
+  --chart-4: #edb12d;
+  --chart-5: #b8b59a;
+  --sidebar: #17160e;
+  --sidebar-foreground: #f6f4ea;
+  --sidebar-primary: #e3a31d;
+  --sidebar-primary-foreground: #1c1b12;
+  --sidebar-accent: #34331f;
+  --sidebar-accent-foreground: #f6f4ea;
+  --sidebar-border: #34331f;
+  --sidebar-ring: #e3a31d;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }
