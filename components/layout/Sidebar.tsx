@@ -23,6 +23,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
+  MessageCircle,
 } from "lucide-react";
 import type { Role } from "@/types";
 import { hasAccess, type Module } from "@/lib/permissions";
@@ -43,6 +44,7 @@ const NAV_ITEMS: { label: string; href: string; icon: typeof LayoutDashboard; mo
   { label: "Projects", href: "/projects", icon: FolderKanban, module: "projects" },
   { label: "Contacts", href: "/contacts", icon: Users, module: "contacts" },
   { label: "Calendar & Meetings", href: "/calendar", icon: CalendarDays, module: "calendar" },
+  { label: "Chat", href: "/chat", icon: MessageCircle, module: "dashboard" },
   { label: "Signatures & Contracts", href: "/signatures", icon: PenSquare, module: "compliance" },
   { label: "HR", href: "/hr", icon: UserCog, module: "hr" },
   { label: "Finance", href: "/finance", icon: Wallet, module: "finance" },

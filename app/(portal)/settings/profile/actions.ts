@@ -11,6 +11,10 @@ export type FormState = { error?: string; success?: string } | undefined;
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Name is required"),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .regex(/^[a-z0-9._-]+$/, "Lowercase letters, numbers, dots, dashes, and underscores only"),
   phone: z.string().optional(),
   linkedin_url: z.string().optional(),
 });
@@ -25,11 +29,17 @@ export async function updateProfile(_prevState: FormState, formData: FormData): 
     .from("users")
     .update({
       full_name: parsed.data.full_name,
+      username: parsed.data.username.toLowerCase(),
       phone: parsed.data.phone || null,
       linkedin_url: parsed.data.linkedin_url || null,
     })
     .eq("id", user.id);
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.message.includes("duplicate") || error.message.includes("unique")) {
+      return { error: "That username is already taken." };
+    }
+    return { error: error.message };
+  }
 
   await logAudit({
     actorId: user.id,

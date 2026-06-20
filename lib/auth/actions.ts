@@ -31,7 +31,7 @@ async function getActorContext(userId: string) {
   const supabase = await createClient();
   const { data: staffRow } = await supabase
     .from("users")
-    .select("id, full_name, two_factor_enabled, two_factor_secret, two_factor_backup_codes")
+    .select("id, full_name, two_factor_enabled, two_factor_secret, two_factor_backup_codes, two_factor_exempt")
     .eq("id", userId)
     .maybeSingle();
 
@@ -41,7 +41,7 @@ async function getActorContext(userId: string) {
 
   const { data: partnerRow } = await supabase
     .from("partner_contacts")
-    .select("id, full_name, two_factor_enabled, two_factor_secret, two_factor_backup_codes")
+    .select("id, full_name, two_factor_enabled, two_factor_secret, two_factor_backup_codes, two_factor_exempt")
     .eq("id", userId)
     .maybeSingle();
 
@@ -61,17 +61,33 @@ export async function login(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: signInData, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     return { error: "Incorrect email or password." };
   }
 
-  // Mandatory 2FA every session (Section 14.1) — a fresh password sign-in
-  // never inherits a previous session's verified flag.
   const cookieStore = await cookies();
   cookieStore.delete(STAFF_2FA_COOKIE);
   cookieStore.delete(PARTNER_2FA_COOKIE);
 
+  // Narrow, explicit exemption for test accounts only (see migration 0018) —
+  // every real account still goes through mandatory 2FA (Section 14.1).
+  if (signInData.user) {
+    const { isStaff, row } = await getActorContext(signInData.user.id);
+    if (row?.two_factor_exempt) {
+      cookieStore.set(isStaff ? STAFF_2FA_COOKIE : PARTNER_2FA_COOKIE, "1", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: isStaff ? STAFF_SESSION_MAX_AGE : PARTNER_SESSION_MAX_AGE,
+      });
+      redirect(isStaff ? "/dashboard" : "/partner/dashboard");
+    }
+  }
+
+  // Mandatory 2FA every session (Section 14.1) — a fresh password sign-in
+  // never inherits a previous session's verified flag.
   redirect("/2fa-verify");
 }
 
@@ -83,6 +99,7 @@ export async function generateTotpSetupData() {
   if (!user) redirect("/login");
 
   const { isStaff, row } = await getActorContext(user.id);
+  if (row?.two_factor_exempt) redirect(isStaff ? "/dashboard" : "/partner/dashboard");
   if (row?.two_factor_enabled) redirect("/2fa-verify");
 
   const label = `${row?.full_name ?? user.email} (${user.email})`;

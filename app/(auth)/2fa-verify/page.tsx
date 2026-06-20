@@ -12,20 +12,24 @@ export default async function TwoFaVerifyPage() {
 
   const { data: staffRow } = await supabase
     .from("users")
-    .select("two_factor_enabled")
+    .select("two_factor_enabled, two_factor_exempt")
     .eq("id", user.id)
     .maybeSingle();
 
   let enabled = staffRow?.two_factor_enabled ?? null;
+  let exempt = staffRow?.two_factor_exempt ?? false;
+  const isStaff = staffRow !== null;
   if (enabled === null) {
     const { data: partnerRow } = await supabase
       .from("partner_contacts")
-      .select("two_factor_enabled")
+      .select("two_factor_enabled, two_factor_exempt")
       .eq("id", user.id)
       .maybeSingle();
     enabled = partnerRow?.two_factor_enabled ?? false;
+    exempt = partnerRow?.two_factor_exempt ?? false;
   }
 
+  if (exempt) redirect(isStaff ? "/dashboard" : "/partner/dashboard");
   if (!enabled) redirect("/2fa-setup");
 
   return (

@@ -28,7 +28,7 @@ export function Topbar({ user, notifications }: { user: User; notifications: Not
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
       <div className="text-sm text-text-muted">
-        {ROLE_LABELS[user.role]}
+        {ROLE_LABELS[user.role]} <span className="text-text-muted/70">· @{user.username}</span>
       </div>
       <div className="flex items-center gap-4">
         <NotificationBell notifications={notifications} />
@@ -45,7 +45,7 @@ export function Topbar({ user, notifications }: { user: User; notifications: Not
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>
               <div className="font-medium">{user.full_name}</div>
-              <div className="text-xs text-text-muted">{user.email}</div>
+              <div className="text-xs text-text-muted">@{user.username}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

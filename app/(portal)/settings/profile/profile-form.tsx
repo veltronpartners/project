@@ -19,6 +19,10 @@ export function ProfileForm({ user }: { user: User }) {
           <Input id="full_name" name="full_name" required defaultValue={user.full_name} />
         </div>
         <div className="space-y-2">
+          <Label htmlFor="username">Username *</Label>
+          <Input id="username" name="username" required defaultValue={user.username} />
+        </div>
+        <div className="space-y-2">
           <Label>Email</Label>
           <Input value={user.email} disabled />
         </div>

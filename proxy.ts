@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
   // Authenticated but on a "logged out only" page — figure out where they belong.
   const { data: staffRow } = await supabase
     .from("users")
-    .select("id")
+    .select("id, two_factor_exempt")
     .eq("id", user.id)
     .maybeSingle();
   const isStaff = Boolean(staffRow);
@@ -58,8 +58,13 @@ export async function proxy(request: NextRequest) {
       // Staff accounts never get routed into the partner portal (Section 10.2).
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
+    const { data: partnerRow } = await supabase
+      .from("partner_contacts")
+      .select("two_factor_exempt")
+      .eq("id", user.id)
+      .maybeSingle();
     const verified = request.cookies.get(PARTNER_2FA_COOKIE);
-    if (!verified) {
+    if (!verified && !partnerRow?.two_factor_exempt) {
       return NextResponse.redirect(new URL("/2fa-verify", request.url));
     }
     return response;
@@ -70,7 +75,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/partner/dashboard", request.url));
   }
   const verified = request.cookies.get(STAFF_2FA_COOKIE);
-  if (!verified) {
+  if (!verified && !staffRow?.two_factor_exempt) {
     return NextResponse.redirect(new URL("/2fa-verify", request.url));
   }
 
