@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth/actions";
+import { PartnerMobileNav } from "@/components/partner/PartnerSidebar";
 import type { PartnerContact } from "@/types";
 
 function initials(name: string) {
@@ -24,8 +25,11 @@ function initials(name: string) {
 
 export function PartnerTopbar({ partner }: { partner: PartnerContact }) {
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
-      <div className="text-sm text-text-muted">Partner Portal</div>
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 md:px-6">
+      <div className="flex items-center gap-2">
+        <PartnerMobileNav />
+        <div className="text-sm text-text-muted">Partner Portal</div>
+      </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-full outline-none">

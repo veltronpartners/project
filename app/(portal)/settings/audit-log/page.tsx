@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentStaffUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -8,24 +9,42 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { AuditLogEntry } from "@/types";
 
+const PAGE_SIZE = 50;
+
 export default async function AuditLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ resource_type?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ resource_type?: string; from?: string; to?: string; page?: string }>;
 }) {
   const user = await getCurrentStaffUser();
   if (!hasAccess(user.role, "audit_log")) redirect("/dashboard");
 
-  const { resource_type, from, to } = await searchParams;
+  const { resource_type, from, to, page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
   const supabase = await createClient();
 
-  let query = supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(500);
+  let query = supabase
+    .from("audit_log")
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   if (resource_type) query = query.eq("resource_type", resource_type);
   if (from) query = query.gte("created_at", from);
   if (to) query = query.lte("created_at", to);
 
-  const { data: entries } = await query;
+  const { data: entries, count } = await query;
   const rows = (entries ?? []) as AuditLogEntry[];
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+
+  const filterParams = new URLSearchParams();
+  if (resource_type) filterParams.set("resource_type", resource_type);
+  if (from) filterParams.set("from", from);
+  if (to) filterParams.set("to", to);
+  function pageHref(p: number) {
+    const params = new URLSearchParams(filterParams);
+    params.set("page", String(p));
+    return `?${params.toString()}`;
+  }
 
   const actorIds = [...new Set(rows.map((r) => r.actor_id).filter(Boolean))];
   const { data: actors } = actorIds.length
@@ -46,8 +65,11 @@ export default async function AuditLogPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-semibold">Audit Log</h1>
-        <ExportCsvButton filename="veltron-audit-log.csv" rows={csvRows} />
+        <div>
+          <h1 className="font-heading text-2xl font-semibold">Audit Log</h1>
+          <p className="text-sm text-text-muted">{count ?? 0} entries total</p>
+        </div>
+        <ExportCsvButton filename="veltron-audit-log-page.csv" rows={csvRows} />
       </div>
 
       <form className="flex flex-wrap gap-2" method="get">
@@ -89,6 +111,26 @@ export default async function AuditLogPage({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm text-text-muted">
+          <span>
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex gap-2">
+            {page > 1 && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={pageHref(page - 1)}>Previous</Link>
+              </Button>
+            )}
+            {page < totalPages && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={pageHref(page + 1)}>Next</Link>
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

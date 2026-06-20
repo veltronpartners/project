@@ -15,6 +15,7 @@ const EXPORTABLE_TABLES: Record<string, string> = {
   compliance_conflicts: "conflict_register",
   compliance_contracts: "contracts",
   projects: "internal_projects",
+  audit_log: "audit_log",
 };
 
 function toCsv(rows: Record<string, unknown>[]): string {

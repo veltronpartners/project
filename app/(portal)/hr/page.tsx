@@ -34,7 +34,7 @@ export default async function HrOverviewPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Active staff" value={staffCount ?? 0} />
         <StatCard label="Open onboarding tasks" value={pendingOnboarding ?? 0} />
         <StatCard label="Pending leave requests" value={pendingLeave ?? 0} />

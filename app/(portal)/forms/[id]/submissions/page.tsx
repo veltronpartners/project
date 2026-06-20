@@ -40,7 +40,7 @@ export default async function FormSubmissionsPage({
       {!assignments || assignments.length === 0 ? (
         <EmptyState message="This form hasn't been assigned to anyone yet." />
       ) : (
-        <div className="overflow-hidden rounded-md border border-border">
+        <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-text-muted">
               <tr>

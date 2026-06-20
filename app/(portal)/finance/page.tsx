@@ -40,7 +40,7 @@ export default async function FinanceOverviewPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Total budgets (all periods)" value={`$${totalBudget.toLocaleString()}`} />
         <StatCard label="Spend this month" value={`$${monthSpend.toLocaleString()}`} />
         <StatCard label="Pending expense approvals" value={pendingCount ?? 0} />

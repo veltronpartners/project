@@ -24,6 +24,7 @@ const MODULES = [
   { key: "compliance_conflicts", label: "Compliance — Conflicts" },
   { key: "compliance_contracts", label: "Compliance — Contracts" },
   { key: "projects", label: "Projects" },
+  { key: "audit_log", label: "Audit Log" },
 ];
 
 export function ExportButtons() {

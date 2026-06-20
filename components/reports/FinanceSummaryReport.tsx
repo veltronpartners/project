@@ -36,7 +36,7 @@ export function FinanceSummaryReport({
       {Object.keys(byCategory).length === 0 ? (
         <EmptyState message="No expenses recorded yet." />
       ) : (
-        <div className="overflow-hidden rounded-md border border-border">
+        <div className="overflow-x-auto rounded-md border border-border">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-text-muted">
               <tr>

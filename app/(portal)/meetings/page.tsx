@@ -47,7 +47,7 @@ export default async function MeetingsListPage() {
 
 function MeetingTable({ rows }: { rows: Meeting[] }) {
   return (
-    <div className="overflow-hidden rounded-md border border-border">
+    <div className="overflow-x-auto rounded-md border border-border">
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-left text-text-muted">
           <tr>

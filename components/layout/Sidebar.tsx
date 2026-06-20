@@ -25,6 +25,7 @@ import {
   PanelLeftOpen,
   MessageCircle,
   ClipboardEdit,
+  Menu,
 } from "lucide-react";
 import type { Role } from "@/types";
 import { hasAccess, type Module } from "@/lib/permissions";
@@ -35,6 +36,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS: { label: string; href: string; icon: typeof LayoutDashboard; module: Module }[] = [
@@ -133,5 +141,41 @@ export function Sidebar({ role }: { role: Role }) {
         </Button>
       </div>
     </aside>
+  );
+}
+
+export function MobileNav({ role }: { role: Role }) {
+  const [open, setOpen] = useState(false);
+  const items = NAV_ITEMS.filter((item) => hasAccess(role, item.module));
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open navigation">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[260px] bg-sidebar p-0 text-sidebar-foreground">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2 text-left">
+            <VeltronMark className="h-7 w-8 shrink-0" />
+            <span className="font-display text-lg font-bold">Veltron</span>
+          </SheetTitle>
+        </SheetHeader>
+        <nav className="flex-1 space-y-1 px-3 py-2">
+          {items.map(({ label, href, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/90 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+      </SheetContent>
+    </Sheet>
   );
 }

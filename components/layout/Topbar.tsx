@@ -2,6 +2,7 @@ import type { Notification, User } from "@/types";
 import { ROLE_LABELS } from "@/types";
 import { signOut } from "@/lib/auth/actions";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import { MobileNav } from "@/components/layout/Sidebar";
 import {
   Avatar,
   AvatarFallback,
@@ -26,9 +27,12 @@ function initials(name: string) {
 
 export function Topbar({ user, notifications }: { user: User; notifications: Notification[] }) {
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
-      <div className="text-sm text-text-muted">
-        {ROLE_LABELS[user.role]} <span className="text-text-muted/70">· @{user.username}</span>
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 md:px-6">
+      <div className="flex items-center gap-2">
+        <MobileNav role={user.role} />
+        <div className="text-sm text-text-muted">
+          {ROLE_LABELS[user.role]} <span className="hidden text-text-muted/70 sm:inline">· @{user.username}</span>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <NotificationBell notifications={notifications} />

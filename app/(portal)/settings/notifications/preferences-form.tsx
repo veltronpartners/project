@@ -18,7 +18,7 @@ function SaveButton() {
 export function PreferencesForm({ initial, hasMailbox }: { initial: CategoryPrefs; hasMailbox: boolean }) {
   return (
     <form action={saveNotificationPreferences} className="space-y-4">
-      <div className="overflow-hidden rounded-md border border-border">
+      <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-left text-text-muted">
             <tr>
