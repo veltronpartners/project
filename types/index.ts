@@ -226,6 +226,40 @@ export interface KbArticle {
   updated_at: string;
 }
 
+export interface SignatureRequest {
+  id: string;
+  document_title: string;
+  source_document_url: string;
+  final_signed_document_url: string | null;
+  signing_method: "in_portal" | "uploaded_external";
+  signing_order: "sequential" | "parallel";
+  status: "draft" | "sent" | "partially_signed" | "fully_signed" | "locked";
+  portfolio_id: string | null;
+  engagement_id: string | null;
+  contract_id: string | null;
+  created_by: string | null;
+  externally_signed_date: string | null;
+  externally_signed_by: string | null;
+  external_signing_tool: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SignatureSigner {
+  id: string;
+  signature_request_id: string;
+  signer_name: string;
+  signer_email: string;
+  is_internal: boolean;
+  internal_user_id: string | null;
+  signing_sequence: number | null;
+  status: "pending" | "signed" | "declined";
+  signed_at: string | null;
+  signature_ip_address: string | null;
+  secure_link_token: string | null;
+  created_at: string;
+}
+
 export interface ConflictEntry {
   id: string;
   reported_by: string | null;
