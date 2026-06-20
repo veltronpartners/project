@@ -15,9 +15,11 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 import { OverviewForm } from "./overview-form";
-import type { Decision, PortfolioAction, PortfolioCompany, PortfolioKpi } from "@/types";
+import type { Decision, Meeting, PortfolioAction, PortfolioCompany, PortfolioKpi, VaultDocument } from "@/types";
 
 export default async function PortfolioProfilePage({
   params,
@@ -36,12 +38,14 @@ export default async function PortfolioProfilePage({
 
   if (!portfolio) notFound();
 
-  const [{ data: kpis }, { data: actions }, { data: decisions }, { data: staff }] =
+  const [{ data: kpis }, { data: actions }, { data: decisions }, { data: staff }, { data: meetings }, { data: documents }] =
     await Promise.all([
       supabase.from("portfolio_kpis").select("*").eq("portfolio_id", id),
       supabase.from("portfolio_actions").select("*").eq("portfolio_id", id).order("priority"),
       supabase.from("decisions").select("*").eq("portfolio_id", id).order("date", { ascending: false }),
       supabase.from("users").select("id, full_name, role").order("full_name"),
+      supabase.from("meetings").select("*").eq("portfolio_id", id).order("date", { ascending: false }),
+      supabase.from("documents").select("*").eq("portfolio_id", id).order("created_at", { ascending: false }),
     ]);
 
   const editable = canEdit(user.role, "portfolio");
@@ -138,12 +142,77 @@ export default async function PortfolioProfilePage({
           )}
         </TabsContent>
 
-        <TabsContent value="meetings" className="mt-4">
-          <EmptyState message="The Calendar & Meetings module hasn't been built yet (Phase 2)." />
+        <TabsContent value="meetings" className="mt-4 space-y-4">
+          <div className="flex justify-end">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/meetings/new">Schedule Meeting</Link>
+            </Button>
+          </div>
+          {!meetings || meetings.length === 0 ? (
+            <EmptyState message="No meetings scheduled for this company yet." />
+          ) : (
+            <div className="overflow-x-auto rounded-md border border-border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-left text-text-muted">
+                  <tr>
+                    <th className="px-4 py-2 font-medium">Title</th>
+                    <th className="px-4 py-2 font-medium">Type</th>
+                    <th className="px-4 py-2 font-medium">Date</th>
+                    <th className="px-4 py-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(meetings as Meeting[]).map((m) => (
+                    <tr key={m.id} className="border-t border-border hover:bg-muted/30">
+                      <td className="px-4 py-2">
+                        <Link href={`/meetings/${m.id}`} className="font-medium hover:underline">
+                          {m.title}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2 text-text-muted">{m.meeting_type ?? "—"}</td>
+                      <td className="px-4 py-2 text-text-muted">
+                        {new Date(m.date).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                      </td>
+                      <td className="px-4 py-2">
+                        <Badge variant="outline" className="capitalize">
+                          {m.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="documents" className="mt-4">
-          <EmptyState message="The Document Vault hasn't been built yet (Phase 2)." />
+        <TabsContent value="documents" className="mt-4 space-y-4">
+          <div className="flex justify-end">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/documents/new">Upload Document</Link>
+            </Button>
+          </div>
+          {!documents || documents.length === 0 ? (
+            <EmptyState message="No documents uploaded for this company yet." />
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {(documents as VaultDocument[]).map((doc) => (
+                <Link
+                  key={doc.id}
+                  href={`/documents/${doc.id}`}
+                  className="flex items-start gap-3 rounded-md border border-border p-4 hover:bg-muted/30"
+                >
+                  <FileText className="mt-0.5 h-5 w-5 shrink-0 text-text-muted" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{doc.title}</p>
+                    <p className="text-xs text-text-muted">
+                      {doc.category ?? "uncategorised"} · v{doc.version}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="decisions" className="mt-4">
