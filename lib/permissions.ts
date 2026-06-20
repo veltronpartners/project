@@ -138,12 +138,12 @@ const MATRIX: Record<Module, Record<Role, AccessLevel>> = {
   kb: {
     director: "full",
     veltron_lead: "full",
-    partnerships_officer: "full",
-    finance_officer: "full",
-    hr_officer: "full",
-    compliance_officer: "full",
-    secretary: "full",
-    staff: "full",
+    partnerships_officer: "read",
+    finance_officer: "read",
+    hr_officer: "read",
+    compliance_officer: "read",
+    secretary: "read",
+    staff: "read",
   },
   announcements: {
     director: "full",
