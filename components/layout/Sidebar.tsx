@@ -24,6 +24,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   MessageCircle,
+  ClipboardEdit,
 } from "lucide-react";
 import type { Role } from "@/types";
 import { hasAccess, type Module } from "@/lib/permissions";
@@ -46,6 +47,7 @@ const NAV_ITEMS: { label: string; href: string; icon: typeof LayoutDashboard; mo
   { label: "Calendar & Meetings", href: "/calendar", icon: CalendarDays, module: "calendar" },
   { label: "Chat", href: "/chat", icon: MessageCircle, module: "dashboard" },
   { label: "Signatures & Contracts", href: "/signatures", icon: PenSquare, module: "compliance" },
+  { label: "Forms", href: "/forms", icon: ClipboardEdit, module: "intake" },
   { label: "HR", href: "/hr", icon: UserCog, module: "hr" },
   { label: "Finance", href: "/finance", icon: Wallet, module: "finance" },
   { label: "Compliance", href: "/compliance", icon: ShieldCheck, module: "compliance" },

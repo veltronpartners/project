@@ -227,6 +227,116 @@ export interface KbArticle {
   updated_at: string;
 }
 
+export interface PartnerContact {
+  id: string;
+  portfolio_id: string;
+  full_name: string;
+  role_title: string | null;
+  email: string;
+  phone: string | null;
+  linkedin_url: string | null;
+  contact_type: "primary" | "secondary";
+  is_active: boolean;
+  last_login: string | null;
+  welcome_email_sent: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FormRecord {
+  id: string;
+  title: string;
+  description: string | null;
+  form_type: "onboarding" | "periodic_report" | "document_request" | "annual_review" | "exit" | "custom" | null;
+  status: "draft" | "active" | "archived";
+  schema: import("@/lib/forms/schema").FormSchema;
+  created_by: string | null;
+  last_edited_by: string | null;
+  is_template: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FormAssignment {
+  id: string;
+  form_id: string;
+  portfolio_id: string | null;
+  partner_contact_id: string | null;
+  assigned_by: string | null;
+  cover_note: string | null;
+  deadline: string | null;
+  status: "not_started" | "in_progress" | "submitted" | "reopened" | "accepted" | "expired";
+  notify_email: boolean;
+  notify_portal: boolean;
+  scheduled_send_at: string | null;
+  sent_at: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  review_flag: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FormSubmission {
+  id: string;
+  assignment_id: string;
+  partner_contact_id: string | null;
+  answers: import("@/lib/forms/schema").FormAnswers;
+  is_complete: boolean;
+  submitted_at: string | null;
+  last_saved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PartnerDocument {
+  id: string;
+  portfolio_id: string | null;
+  partner_contact_id: string | null;
+  title: string;
+  category: "financial" | "legal" | "operational" | "other" | null;
+  description: string | null;
+  file_url: string;
+  file_type: string | null;
+  file_size_kb: number | null;
+  source: "partner_upload" | "form_submission" | "veltron_request";
+  status: "received" | "under_review" | "accepted" | "rejected";
+  rejection_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PartnerMessage {
+  id: string;
+  portfolio_id: string;
+  sender_type: "partner" | "veltron_staff";
+  sender_partner_id: string | null;
+  sender_staff_id: string | null;
+  message_text: string;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface PartnerAction {
+  id: string;
+  portfolio_id: string;
+  partner_contact_id: string;
+  assigned_by: string | null;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: "pending" | "in_progress" | "done" | "overdue";
+  completion_note: string | null;
+  evidence_file_url: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ChatChannel {
   id: string;
   type: "group" | "direct";

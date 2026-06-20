@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentStaffUser } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -14,6 +15,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { OverviewForm } from "./overview-form";
 import type { Decision, PortfolioAction, PortfolioCompany, PortfolioKpi } from "@/types";
 
@@ -52,11 +54,16 @@ export default async function PortfolioProfilePage({
           <h1 className="font-heading text-2xl font-semibold">{(portfolio as PortfolioCompany).name}</h1>
           <p className="text-sm text-text-muted">{(portfolio as PortfolioCompany).industry ?? "—"}</p>
         </div>
-        <HealthSelector
-          portfolioId={id}
-          value={(portfolio as PortfolioCompany).health_indicator}
-          disabled={!editable}
-        />
+        <div className="flex items-center gap-3">
+          <HealthSelector
+            portfolioId={id}
+            value={(portfolio as PortfolioCompany).health_indicator}
+            disabled={!editable}
+          />
+          <Button asChild variant="outline">
+            <Link href={`/portfolio/${id}/partner`}>Partner Management</Link>
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="overview">
