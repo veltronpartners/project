@@ -28,7 +28,7 @@ export function VeltronLogo({ className }: { className?: string }) {
   return (
     <div className={cn("relative h-16 w-64", className)}>
       <Image
-        src="/veltron-logo.jpg"
+        src="/veltron-logo.png"
         alt="Veltron Partners"
         fill
         priority
