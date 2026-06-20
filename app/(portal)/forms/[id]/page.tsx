@@ -32,6 +32,12 @@ export default async function EditFormPage({
           <Button asChild variant="outline">
             <Link href={`/forms/${id}/assign`}>Assign</Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link href={`/forms/${id}/links`}>Shareable Links</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/forms/${id}/leads`}>Leads</Link>
+          </Button>
           {editable && (
             <form action={duplicateForm.bind(null, id)}>
               <Button type="submit" variant="outline">

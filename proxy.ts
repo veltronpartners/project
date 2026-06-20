@@ -8,7 +8,7 @@ const STAFF_PUBLIC_PATHS = ["/login", "/forgot-password", "/onboard"];
 const TFA_PATHS = ["/2fa-setup", "/2fa-verify"];
 
 function isPublicAsset(pathname: string) {
-  return pathname.startsWith("/sign/") || pathname === "/partner-login";
+  return pathname.startsWith("/sign/") || pathname.startsWith("/respond/") || pathname === "/partner-login";
 }
 
 export async function proxy(request: NextRequest) {

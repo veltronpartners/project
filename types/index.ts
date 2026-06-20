@@ -290,6 +290,35 @@ export interface FormSubmission {
   updated_at: string;
 }
 
+export interface FormLinkToken {
+  id: string;
+  form_id: string;
+  token: string;
+  recipient_name: string | null;
+  recipient_email: string | null;
+  created_by: string | null;
+  expires_at: string;
+  status: "active" | "submitted" | "expired" | "revoked";
+  submission_id: string | null;
+  created_at: string;
+}
+
+export interface LeadFormSubmission {
+  id: string;
+  token_id: string;
+  form_id: string;
+  respondent_name: string;
+  respondent_email: string;
+  respondent_company: string | null;
+  answers: import("@/lib/forms/schema").FormAnswers;
+  submitted_at: string | null;
+  review_decision: "pending" | "move_to_intake" | "declined";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  linked_engagement_id: string | null;
+  created_at: string;
+}
+
 export interface PartnerDocument {
   id: string;
   portfolio_id: string | null;
