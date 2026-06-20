@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentStaffUser } from "@/lib/auth/dal";
 import { logAudit } from "@/lib/audit";
 import { canEdit } from "@/lib/permissions";
+import { createPartnerNotification } from "@/lib/partner-notifications";
 import type { FormSchema } from "@/lib/forms/schema";
 
 export type FormState = { error?: string } | undefined;
@@ -129,11 +130,10 @@ export async function assignForm(formId: string, _prevState: FormState, formData
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form for errors." };
 
   const supabase = await createClient();
-  const { data: contact } = await supabase
-    .from("partner_contacts")
-    .select("portfolio_id")
-    .eq("id", parsed.data.partner_contact_id)
-    .maybeSingle();
+  const [{ data: contact }, { data: form }] = await Promise.all([
+    supabase.from("partner_contacts").select("portfolio_id").eq("id", parsed.data.partner_contact_id).maybeSingle(),
+    supabase.from("forms").select("title").eq("id", formId).maybeSingle(),
+  ]);
   if (!contact) return { error: "Partner contact not found." };
 
   const { data: assignment, error } = await supabase
@@ -150,6 +150,14 @@ export async function assignForm(formId: string, _prevState: FormState, formData
     .select("id")
     .single();
   if (error || !assignment) return { error: "Couldn't assign the form: " + (error?.message ?? "") };
+
+  await createPartnerNotification({
+    partnerContactId: parsed.data.partner_contact_id,
+    type: "form_assigned",
+    title: `New form: ${form?.title ?? "Untitled form"}`,
+    message: emptyToNull(formData.get("cover_note")) ?? undefined,
+    link: `/partner/forms/${assignment.id}`,
+  });
 
   await logAudit({ actorId: user.id, action: "created", resourceType: "form_assignment", resourceId: assignment.id });
   revalidatePath(`/forms/${formId}/submissions`);
@@ -181,6 +189,17 @@ export async function reviewSubmission(
     .select("partner_contact_id, form_id, forms(title)")
     .eq("id", assignmentId)
     .maybeSingle();
+
+  if (assignment?.partner_contact_id) {
+    const formTitle = (assignment.forms as unknown as { title: string } | null)?.title ?? "your form";
+    await createPartnerNotification({
+      partnerContactId: assignment.partner_contact_id,
+      type: "form_reviewed",
+      title: decision === "accepted" ? `Submission accepted: ${formTitle}` : `Changes requested: ${formTitle}`,
+      message: decision === "reopened" ? flagNote : undefined,
+      link: `/partner/forms/${assignmentId}`,
+    });
+  }
 
   await logAudit({
     actorId: user.id,

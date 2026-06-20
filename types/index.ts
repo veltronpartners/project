@@ -730,3 +730,14 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
 }
+
+export interface PartnerNotification {
+  id: string;
+  partner_contact_id: string;
+  type: "form_assigned" | "form_reviewed" | "message" | "action_assigned" | "document_reviewed" | "report_due";
+  title: string;
+  message: string | null;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+}

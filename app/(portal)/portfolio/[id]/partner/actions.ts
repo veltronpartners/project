@@ -3,9 +3,11 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentStaffUser } from "@/lib/auth/dal";
 import { logAudit } from "@/lib/audit";
 import { canEdit } from "@/lib/permissions";
+import { createPartnerNotification } from "@/lib/partner-notifications";
 
 export type FormState = { error?: string } | undefined;
 
@@ -22,6 +24,7 @@ const contactSchema = z.object({
   email: z.string().email(),
   role_title: z.string().optional(),
   contact_type: z.enum(["primary", "secondary"]),
+  password: z.string().min(8, "Temporary password must be at least 8 characters"),
 });
 
 export async function addPartnerContact(
@@ -35,17 +38,42 @@ export async function addPartnerContact(
   const parsed = contactSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form for errors." };
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("partner_contacts").insert({
+  // Bug fix: this used to only insert a partner_contacts row with a random
+  // id, never creating an actual Supabase Auth account -- the contact had
+  // no way to ever log in. Mirror createStaffAccount's pattern: create the
+  // auth user first, then the domain row with the SAME id.
+  const admin = createAdminClient();
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    email_confirm: true,
+  });
+  if (createError || !created.user) {
+    return { error: "Couldn't create the login: " + (createError?.message ?? "unknown error") };
+  }
+
+  const { error } = await admin.from("partner_contacts").insert({
+    id: created.user.id,
     portfolio_id: portfolioId,
     full_name: parsed.data.full_name,
     email: parsed.data.email,
     role_title: parsed.data.role_title || null,
     contact_type: parsed.data.contact_type,
+    is_active: true,
   });
-  if (error) return { error: "Couldn't add contact: " + error.message };
+  if (error) {
+    await admin.auth.admin.deleteUser(created.user.id);
+    return { error: "Couldn't save the contact record: " + error.message };
+  }
 
-  await logAudit({ actorId: user.id, action: "created", resourceType: "partner_contact", resourceName: parsed.data.full_name });
+  await logAudit({
+    actorId: user.id,
+    action: "invited",
+    resourceType: "partner_contact",
+    resourceId: created.user.id,
+    resourceName: parsed.data.full_name,
+    newValue: { email: parsed.data.email, portfolio_id: portfolioId },
+  });
   revalidatePath(`/portfolio/${portfolioId}/partner`);
   return undefined;
 }
@@ -67,6 +95,23 @@ export async function replyToPartner(
     message_text: text,
   });
   if (error) return { error: error.message };
+
+  const { data: contacts } = await supabase
+    .from("partner_contacts")
+    .select("id")
+    .eq("portfolio_id", portfolioId)
+    .eq("is_active", true);
+  await Promise.all(
+    (contacts ?? []).map((c) =>
+      createPartnerNotification({
+        partnerContactId: c.id,
+        type: "message",
+        title: `New message from ${user.full_name}`,
+        message: text.slice(0, 100),
+        link: "/partner/messages",
+      }),
+    ),
+  );
 
   await logAudit({ actorId: user.id, action: "created", resourceType: "partner_message", resourceId: portfolioId });
 
@@ -99,6 +144,14 @@ export async function addPartnerAction(
   });
   if (error) return { error: error.message };
 
+  await createPartnerNotification({
+    partnerContactId: parsed.data.partner_contact_id,
+    type: "action_assigned",
+    title: `New action: ${parsed.data.title}`,
+    message: (formData.get("description") ?? "").toString() || undefined,
+    link: "/partner/actions",
+  });
+
   await logAudit({ actorId: user.id, action: "created", resourceType: "partner_action", resourceName: parsed.data.title });
 
   revalidatePath(`/portfolio/${portfolioId}/partner`);
@@ -120,6 +173,15 @@ export async function reviewPartnerDocument(documentId: string, portfolioId: str
     .from("partner_documents")
     .update({ status, reviewed_by: user.id, reviewed_at: new Date().toISOString() })
     .eq("id", documentId);
+
+  if (doc?.partner_contact_id) {
+    await createPartnerNotification({
+      partnerContactId: doc.partner_contact_id,
+      type: "document_reviewed",
+      title: status === "accepted" ? `Document accepted: ${doc.title}` : `Document needs attention: ${doc.title}`,
+      link: "/partner/documents",
+    });
+  }
 
   await logAudit({ actorId: user.id, action: status === "accepted" ? "approved" : "declined", resourceType: "partner_document", resourceId: documentId });
   revalidatePath(`/portfolio/${portfolioId}/partner`);
