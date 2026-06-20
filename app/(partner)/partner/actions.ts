@@ -9,6 +9,41 @@ import type { FormAnswers } from "@/lib/forms/schema";
 
 export type FormState = { error?: string; success?: boolean } | undefined;
 
+export async function uploadFormFieldFile(
+  assignmentId: string,
+  fieldId: string,
+  file: File,
+): Promise<{ path?: string; error?: string }> {
+  const partner = await getCurrentPartner();
+
+  if (file.size === 0) return { error: "Empty file." };
+  if (file.size > 25 * 1024 * 1024) return { error: "Files must be 25MB or smaller." };
+
+  const supabase = await createClient();
+  const { data: assignment } = await supabase
+    .from("form_assignments")
+    .select("id")
+    .eq("id", assignmentId)
+    .eq("partner_contact_id", partner.id)
+    .maybeSingle();
+  if (!assignment) return { error: "Form not found." };
+
+  const storagePath = `form-uploads/${partner.id}/${assignmentId}/${fieldId}-${randomUUID()}-${file.name}`;
+  const { error } = await supabase.storage.from("documents").upload(storagePath, file, {
+    contentType: file.type || "application/octet-stream",
+  });
+  if (error) return { error: "Upload failed: " + error.message };
+
+  return { path: storagePath };
+}
+
+export async function getFormFieldFileUrl(storagePath: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.storage.from("documents").createSignedUrl(storagePath, 60 * 60);
+  if (error || !data) return null;
+  return data.signedUrl;
+}
+
 export async function saveFormProgress(assignmentId: string, answers: FormAnswers) {
   const partner = await getCurrentPartner();
   const supabase = await createClient();
@@ -61,16 +96,13 @@ export async function submitForm(assignmentId: string, answers: FormAnswers): Pr
     .select("assigned_by, form_id, forms(title)")
     .single();
 
-  if (assignment?.assigned_by) {
-    const { createNotification } = await import("@/lib/notifications");
-    await createNotification({
-      userId: assignment.assigned_by,
-      type: "flagged_item",
-      title: `${partner.full_name} submitted a form`,
-      message: (assignment.forms as unknown as { title: string } | null)?.title,
-      link: `/forms/${assignment.form_id}/submissions/${assignmentId}`,
-    });
-  }
+  const { notifyPortfolioLeadOrDirectors } = await import("@/lib/notifications");
+  await notifyPortfolioLeadOrDirectors(assignment?.assigned_by, {
+    type: "flagged_item",
+    title: `${partner.full_name} submitted a form`,
+    message: (assignment?.forms as unknown as { title: string } | null)?.title,
+    link: `/forms/${assignment?.form_id}/submissions/${assignmentId}`,
+  });
 
   await logAudit({
     actorId: partner.id,
@@ -95,7 +127,7 @@ export async function uploadPartnerDocument(_prevState: FormState, formData: For
   if (file.size > 25 * 1024 * 1024) return { error: "Files must be 25MB or smaller." };
 
   const supabase = await createClient();
-  const storagePath = `partner-uploads/${randomUUID()}-${file.name}`;
+  const storagePath = `partner-uploads/${partner.id}/${randomUUID()}-${file.name}`;
   const { error: uploadError } = await supabase.storage.from("documents").upload(storagePath, file, {
     contentType: file.type || "application/octet-stream",
   });
@@ -118,16 +150,20 @@ export async function uploadPartnerDocument(_prevState: FormState, formData: For
     .select("veltron_lead_id")
     .eq("id", partner.portfolio_id)
     .maybeSingle();
-  if (lead?.veltron_lead_id) {
-    const { createNotification } = await import("@/lib/notifications");
-    await createNotification({
-      userId: lead.veltron_lead_id,
-      type: "flagged_item",
-      title: `${partner.full_name} uploaded a document`,
-      message: title,
-      link: `/documents`,
-    });
-  }
+  const { notifyPortfolioLeadOrDirectors } = await import("@/lib/notifications");
+  await notifyPortfolioLeadOrDirectors(lead?.veltron_lead_id, {
+    type: "flagged_item",
+    title: `${partner.full_name} uploaded a document`,
+    message: title,
+    link: `/portfolio/${partner.portfolio_id}/partner`,
+  });
+
+  await logAudit({
+    actorId: partner.id,
+    action: "created",
+    resourceType: "partner_document",
+    resourceName: title,
+  });
 
   revalidatePath("/partner/documents");
   return { success: true };
@@ -150,6 +186,14 @@ export async function updatePartnerActionStatus(
     .eq("id", actionId)
     .eq("partner_contact_id", partner.id);
 
+  await logAudit({
+    actorId: partner.id,
+    action: "updated",
+    resourceType: "partner_action",
+    resourceId: actionId,
+    newValue: { status },
+  });
+
   revalidatePath("/partner/actions");
 }
 
@@ -166,16 +210,13 @@ export async function requestMeeting(_prevState: FormState, formData: FormData):
     .eq("id", partner.portfolio_id)
     .maybeSingle();
 
-  if (portfolio?.veltron_lead_id) {
-    const { createNotification } = await import("@/lib/notifications");
-    await createNotification({
-      userId: portfolio.veltron_lead_id,
-      type: "flagged_item",
-      title: `Meeting request from ${partner.full_name}`,
-      message: `${reason} — preferred: ${preferredDates || "no preference"}`,
-      link: `/portfolio`,
-    });
-  }
+  const { notifyPortfolioLeadOrDirectors } = await import("@/lib/notifications");
+  await notifyPortfolioLeadOrDirectors(portfolio?.veltron_lead_id, {
+    type: "flagged_item",
+    title: `Meeting request from ${partner.full_name}`,
+    message: `${reason} — preferred: ${preferredDates || "no preference"}`,
+    link: `/portfolio/${partner.portfolio_id}/partner`,
+  });
 
   await logAudit({
     actorId: partner.id,
@@ -207,16 +248,19 @@ export async function sendPartnerMessage(_prevState: FormState, formData: FormDa
     .select("veltron_lead_id")
     .eq("id", partner.portfolio_id)
     .maybeSingle();
-  if (portfolio?.veltron_lead_id) {
-    const { createNotification } = await import("@/lib/notifications");
-    await createNotification({
-      userId: portfolio.veltron_lead_id,
-      type: "flagged_item",
-      title: `Message from ${partner.full_name}`,
-      message: text.slice(0, 100),
-      link: `/portfolio`,
-    });
-  }
+  const { notifyPortfolioLeadOrDirectors } = await import("@/lib/notifications");
+  await notifyPortfolioLeadOrDirectors(portfolio?.veltron_lead_id, {
+    type: "flagged_item",
+    title: `Message from ${partner.full_name}`,
+    message: text.slice(0, 100),
+    link: `/portfolio/${partner.portfolio_id}/partner`,
+  });
+
+  await logAudit({
+    actorId: partner.id,
+    action: "created",
+    resourceType: "partner_message",
+  });
 
   revalidatePath("/partner/messages");
   return { success: true };

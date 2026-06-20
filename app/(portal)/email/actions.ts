@@ -101,8 +101,17 @@ export async function archiveMessage(mailboxEmail: string, folder: string, uid: 
 }
 
 export async function deleteMessage(mailboxEmail: string, folder: string, uid: number) {
+  const user = await getCurrentStaffUser();
   const creds = await getMailboxCredentials(mailboxEmail);
   if (!creds) return;
   await imapMoveMessage(creds, folder, uid, "Trash");
+
+  await logAudit({
+    actorId: user.id,
+    action: "deleted",
+    resourceType: "email_message",
+    resourceName: `${mailboxEmail} / ${folder} #${uid}`,
+  });
+
   revalidatePath("/email");
 }

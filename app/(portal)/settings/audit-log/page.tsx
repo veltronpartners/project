@@ -47,10 +47,14 @@ export default async function AuditLogPage({
   }
 
   const actorIds = [...new Set(rows.map((r) => r.actor_id).filter(Boolean))];
-  const { data: actors } = actorIds.length
-    ? await supabase.from("users").select("id, full_name").in("id", actorIds as string[])
-    : { data: [] as { id: string; full_name: string }[] };
-  const actorNameById = new Map((actors ?? []).map((a) => [a.id, a.full_name]));
+  const [{ data: staffActors }, { data: partnerActors }] = actorIds.length
+    ? await Promise.all([
+        supabase.from("users").select("id, full_name").in("id", actorIds as string[]),
+        supabase.from("partner_contacts").select("id, full_name").in("id", actorIds as string[]),
+      ])
+    : [{ data: [] as { id: string; full_name: string }[] }, { data: [] as { id: string; full_name: string }[] }];
+  const actorNameById = new Map([...(staffActors ?? []), ...(partnerActors ?? [])].map((a) => [a.id, a.full_name]));
+  const partnerActorIds = new Set((partnerActors ?? []).map((a) => a.id));
 
   const csvRows = rows.map((r) => ({
     timestamp: r.created_at,
@@ -103,6 +107,9 @@ export default async function AuditLogPage({
                   </td>
                   <td className="px-4 py-2">
                     {entry.actor_id ? actorNameById.get(entry.actor_id) ?? "—" : "System"}
+                    {entry.actor_id && partnerActorIds.has(entry.actor_id) && (
+                      <span className="ml-1 text-xs text-text-muted">(Partner)</span>
+                    )}
                   </td>
                   <td className="px-4 py-2 capitalize">{entry.action.replace("_", " ")}</td>
                   <td className="px-4 py-2 text-text-muted">{entry.resource_type}</td>

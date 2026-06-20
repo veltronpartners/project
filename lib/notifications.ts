@@ -1,5 +1,4 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/encryption";
 import { sendMail } from "@/lib/mail/smtp";
@@ -13,11 +12,10 @@ export async function createNotification(params: {
   message?: string;
   link?: string;
 }) {
-  const supabase = await createClient();
-
-  // Admin client: the recipient is often not the calling request's own
-  // session (e.g. a partner notifying their Veltron Lead), and the
-  // preferences table's RLS only allows users to read their own row.
+  // Admin client throughout: createNotification is only ever called from
+  // trusted server-side code, and the recipient is often not the calling
+  // request's own session (e.g. a partner notifying their Veltron Lead),
+  // so per-request RLS clients can't reliably read prefs or write the row.
   const admin = createAdminClient();
   const { data: prefRow } = await admin
     .from("notification_preferences")
@@ -27,7 +25,7 @@ export async function createNotification(params: {
   const prefs = withDefaults(prefRow?.categories)[params.type];
 
   if (prefs.in_app) {
-    const { error } = await supabase.from("notifications").insert({
+    const { error } = await admin.from("notifications").insert({
       user_id: params.userId,
       type: params.type,
       title: params.title,
@@ -40,6 +38,26 @@ export async function createNotification(params: {
   if (prefs.email) {
     await relayNotificationEmail(params.userId, params.title, params.message);
   }
+}
+
+/**
+ * Notify a portfolio's assigned Veltron Lead, or every Director if no
+ * lead is assigned -- a partner action (message, document, meeting
+ * request, form submission) should never go completely unseen just
+ * because a portfolio company hasn't had a lead assigned yet.
+ */
+export async function notifyPortfolioLeadOrDirectors(
+  portfolioVeltronLeadId: string | null | undefined,
+  params: Omit<Parameters<typeof createNotification>[0], "userId">,
+) {
+  if (portfolioVeltronLeadId) {
+    await createNotification({ ...params, userId: portfolioVeltronLeadId });
+    return;
+  }
+
+  const admin = createAdminClient();
+  const { data: directors } = await admin.from("users").select("id").eq("role", "director");
+  await notifyMany((directors ?? []).map((d) => d.id), params);
 }
 
 async function relayNotificationEmail(userId: string, title: string, message?: string) {

@@ -134,9 +134,32 @@ function IntakeStageHeader({ engagement, stage }: { engagement: Engagement; stag
   const info = STAGE_INFO[stage];
   return (
     <div className="space-y-3">
-      <div>
-        <p className="text-sm text-text-muted font-mono">{engagement.ref_number}</p>
-        <h1 className="font-heading text-2xl font-semibold">{engagement.company_name}</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <Link href="/intake" className="text-xs text-text-muted hover:underline">
+            ← Back to Engagement Intake
+          </Link>
+          <p className="text-sm text-text-muted font-mono">{engagement.ref_number}</p>
+          <h1 className="font-heading text-2xl font-semibold">{engagement.company_name}</h1>
+        </div>
+        <div className="flex gap-2">
+          {stage > 1 && (
+            <Link
+              href={`/intake/${engagement.id}/stage/${stage - 1}`}
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted/30"
+            >
+              ← Previous stage
+            </Link>
+          )}
+          {stage < 6 && (
+            <Link
+              href={`/intake/${engagement.id}/stage/${stage + 1}`}
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted/30"
+            >
+              Next stage →
+            </Link>
+          )}
+        </div>
       </div>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5, 6].map((s) => (

@@ -15,6 +15,7 @@ import { ReplyForm } from "./reply-form";
 import { ActionForm } from "./action-form";
 import { ReportScheduleSelect } from "@/components/partner/ReportScheduleSelect";
 import { PartnerDocumentReview } from "@/components/partner/PartnerDocumentReview";
+import { ViewPartnerDocumentLink } from "@/components/partner/ViewPartnerDocumentLink";
 import type {
   FormAssignment,
   PartnerAction,
@@ -123,6 +124,7 @@ export default async function PortfolioPartnerTabPage({
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="capitalize">{d.status.replace("_", " ")}</Badge>
+                  <ViewPartnerDocumentLink storagePath={d.file_url} />
                   {editable && d.status === "received" && <PartnerDocumentReview documentId={d.id} portfolioId={id} />}
                 </div>
               </div>

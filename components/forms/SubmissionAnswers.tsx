@@ -1,4 +1,5 @@
 import type { FormSchema, FormAnswers } from "@/lib/forms/schema";
+import { ViewFormFieldFileLink } from "./ViewFormFieldFileLink";
 
 function renderValue(value: unknown) {
   if (value === null || value === undefined || value === "") return "—";
@@ -17,7 +18,13 @@ export function SubmissionAnswers({ schema, answers }: { schema: FormSchema; ans
             {section.fields.map((field) => (
               <div key={field.id}>
                 <dt className="text-xs text-text-muted">{field.label}</dt>
-                <dd className="text-sm">{renderValue(answers[field.id])}</dd>
+                <dd className="text-sm">
+                  {field.type === "file_upload" && answers[field.id] ? (
+                    <ViewFormFieldFileLink storagePath={answers[field.id] as string} />
+                  ) : (
+                    renderValue(answers[field.id])
+                  )}
+                </dd>
               </div>
             ))}
           </dl>

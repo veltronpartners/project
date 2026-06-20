@@ -25,7 +25,7 @@ const NAV_ITEMS = [
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <nav className="flex-1 space-y-1 px-3 py-2">
+    <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
       {NAV_ITEMS.map(({ label, href, icon: Icon }) => (
         <Link
           key={href}
@@ -43,7 +43,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 export function PartnerSidebar() {
   return (
-    <aside className="hidden w-64 flex-col bg-sidebar text-sidebar-foreground md:flex">
+    <aside className="sticky top-0 hidden h-screen w-64 flex-col bg-sidebar text-sidebar-foreground md:flex">
       <div className="flex items-center gap-2 px-5 py-5">
         <VeltronMark className="h-7 w-8" />
         <span className="font-display text-lg font-bold">Veltron</span>

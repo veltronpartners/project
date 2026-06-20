@@ -9,6 +9,14 @@ import { canEdit } from "@/lib/permissions";
 
 export type FormState = { error?: string } | undefined;
 
+export async function getPartnerDocumentUrl(storagePath: string): Promise<string | null> {
+  await getCurrentStaffUser();
+  const supabase = await createClient();
+  const { data, error } = await supabase.storage.from("documents").createSignedUrl(storagePath, 60 * 60);
+  if (error || !data) return null;
+  return data.signedUrl;
+}
+
 const contactSchema = z.object({
   full_name: z.string().min(1, "Name is required"),
   email: z.string().email(),
@@ -60,6 +68,8 @@ export async function replyToPartner(
   });
   if (error) return { error: error.message };
 
+  await logAudit({ actorId: user.id, action: "created", resourceType: "partner_message", resourceId: portfolioId });
+
   revalidatePath(`/portfolio/${portfolioId}/partner`);
   return undefined;
 }
@@ -88,6 +98,8 @@ export async function addPartnerAction(
     due_date: (formData.get("due_date") ?? "").toString() || null,
   });
   if (error) return { error: error.message };
+
+  await logAudit({ actorId: user.id, action: "created", resourceType: "partner_action", resourceName: parsed.data.title });
 
   revalidatePath(`/portfolio/${portfolioId}/partner`);
   return undefined;

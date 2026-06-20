@@ -107,7 +107,7 @@ export async function updateArticle(
   });
 
   revalidatePath(`/kb/${id}`);
-  return undefined;
+  redirect(`/kb/${id}`);
 }
 
 export async function incrementViewCount(id: string) {

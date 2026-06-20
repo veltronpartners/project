@@ -16,6 +16,7 @@ export default async function SettingsIndexPage() {
           { href: "/settings/approvals", label: "Approval Routing", description: "CEO approval policy and acting CEO." },
           { href: "/settings/integrations", label: "Integrations", description: "Slack and Notion connections." },
           { href: "/settings/data-export", label: "Data Export", description: "Export modules or the full database." },
+          { href: "/settings/backups", label: "Backups", description: "Automated nightly snapshots, kept for 30 days." },
           { href: "/settings/audit-log", label: "Audit Log", description: "Every action taken across the portal." },
         ]
       : []),

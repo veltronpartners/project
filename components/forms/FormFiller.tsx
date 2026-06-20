@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { saveFormProgress, submitForm } from "@/app/(partner)/partner/actions";
+import {
+  saveFormProgress,
+  submitForm,
+  uploadFormFieldFile,
+  getFormFieldFileUrl,
+} from "@/app/(partner)/partner/actions";
 import type { FormAnswers, FormField, FormSchema } from "@/lib/forms/schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,13 +21,85 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Paperclip, X } from "lucide-react";
+
+function fileNameFromPath(path: string) {
+  const last = path.split("/").pop() ?? path;
+  return last.replace(/^[0-9a-f-]{36}-/, "");
+}
+
+function FileUploadInput({
+  assignmentId,
+  fieldId,
+  value,
+  onChange,
+  disabled,
+}: {
+  assignmentId: string;
+  fieldId: string;
+  value: string | null;
+  onChange: (path: string | null) => void;
+  disabled: boolean;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    setError(null);
+    setUploading(true);
+    const result = await uploadFormFieldFile(assignmentId, fieldId, file);
+    setUploading(false);
+    if (result.error) setError(result.error);
+    else if (result.path) onChange(result.path);
+  }
+
+  async function handleView() {
+    if (!value) return;
+    const url = await getFormFieldFileUrl(value);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+    else setError("Couldn't open this file.");
+  }
+
+  if (value) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+        <Paperclip className="h-4 w-4 shrink-0 text-text-muted" />
+        <button type="button" onClick={handleView} className="truncate text-left hover:underline">
+          {fileNameFromPath(value)}
+        </button>
+        {!disabled && (
+          <button type="button" onClick={() => onChange(null)} className="ml-auto text-text-muted hover:text-danger">
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <Input
+        type="file"
+        disabled={disabled || uploading}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+        }}
+      />
+      {uploading && <p className="text-xs text-text-muted">Uploading…</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
+    </div>
+  );
+}
 
 function FieldInput({
+  assignmentId,
   field,
   value,
   onChange,
   disabled,
 }: {
+  assignmentId: string;
   field: FormField;
   value: string | string[] | boolean | null;
   onChange: (v: string | string[] | boolean | null) => void;
@@ -134,7 +211,15 @@ function FieldInput({
         />
       );
     case "file_upload":
-      return <p className="text-xs text-text-muted">File upload — attach via Documents and reference it in notes.</p>;
+      return (
+        <FileUploadInput
+          assignmentId={assignmentId}
+          fieldId={field.id}
+          value={(value as string) ?? null}
+          onChange={onChange}
+          disabled={disabled}
+        />
+      );
     default:
       return (
         <Input
@@ -161,6 +246,8 @@ export function FormFiller({
   const [isPending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [section, setSection] = useState(0);
   const router = useRouter();
 
   function updateAnswer(fieldId: string, value: string | string[] | boolean | null) {
@@ -171,17 +258,22 @@ export function FormFiller({
     });
   }
 
-  const requiredMissing = schema.sections
-    .flatMap((s) => s.fields)
-    .filter((f) => f.required && f.type !== "section_header")
-    .some((f) => {
-      const v = answers[f.id];
-      return v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0);
-    });
+  const allFields = schema.sections.flatMap((s) => s.fields).filter((f) => f.type !== "section_header");
+  const missingFields = allFields.filter((f) => {
+    if (!f.required) return false;
+    const v = answers[f.id];
+    return v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0);
+  });
 
   async function handleSubmit() {
     setError(null);
+    if (missingFields.length > 0) {
+      setError(`Please complete: ${missingFields.map((f) => f.label).join(", ")}`);
+      return;
+    }
+    setSubmitting(true);
     const result = await submitForm(assignmentId, answers);
+    setSubmitting(false);
     if (result?.error) setError(result.error);
     else {
       setSubmitted(true);
@@ -198,40 +290,73 @@ export function FormFiller({
     );
   }
 
+  const isLastSection = section === schema.sections.length - 1;
+  const currentSection = schema.sections[section];
+
   return (
     <div className="space-y-6">
-      {schema.sections.map((section) => (
-        <div key={section.id} className="space-y-4 rounded-md border border-border p-4">
-          <h3 className="font-heading text-sm font-semibold">{section.title}</h3>
-          {section.fields.map((field) =>
-            field.type === "section_header" ? (
-              <FieldInput key={field.id} field={field} value={null} onChange={() => {}} disabled />
-            ) : (
-              <div key={field.id} className="space-y-1">
-                <Label>
-                  {field.label} {field.required && <span className="text-danger">*</span>}
-                </Label>
-                {field.helpText && <p className="text-xs text-text-muted">{field.helpText}</p>}
-                <FieldInput
-                  field={field}
-                  value={answers[field.id] ?? null}
-                  onChange={(v) => updateAnswer(field.id, v)}
-                  disabled={readOnly}
-                />
-              </div>
-            ),
-          )}
+      {schema.sections.length > 1 && (
+        <div className="flex items-center justify-between text-xs text-text-muted">
+          <span>
+            Section {section + 1} of {schema.sections.length}: {currentSection.title}
+          </span>
+          {isPending && <span>Saving…</span>}
         </div>
-      ))}
+      )}
 
-      {isPending && <p className="text-xs text-text-muted">Saving…</p>}
+      <div className="space-y-4 rounded-md border border-border p-4">
+        {schema.sections.length === 1 && <h3 className="font-heading text-sm font-semibold">{currentSection.title}</h3>}
+        {currentSection.fields.map((field) =>
+          field.type === "section_header" ? (
+            <FieldInput
+              key={field.id}
+              assignmentId={assignmentId}
+              field={field}
+              value={null}
+              onChange={() => {}}
+              disabled
+            />
+          ) : (
+            <div key={field.id} className="space-y-1">
+              <Label>
+                {field.label} {field.required && <span className="text-danger">*</span>}
+              </Label>
+              {field.helpText && <p className="text-xs text-text-muted">{field.helpText}</p>}
+              <FieldInput
+                assignmentId={assignmentId}
+                field={field}
+                value={answers[field.id] ?? null}
+                onChange={(v) => updateAnswer(field.id, v)}
+                disabled={readOnly}
+              />
+            </div>
+          ),
+        )}
+      </div>
+
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      {!readOnly && (
-        <Button onClick={handleSubmit} disabled={requiredMissing}>
-          Submit
+      <div className="flex items-center justify-between">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setSection((s) => Math.max(0, s - 1))}
+          disabled={section === 0}
+        >
+          Back
         </Button>
-      )}
+
+        {!readOnly && isLastSection && (
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {submitting ? "Submitting…" : "Submit"}
+          </Button>
+        )}
+        {!isLastSection && (
+          <Button type="button" onClick={() => setSection((s) => Math.min(schema.sections.length - 1, s + 1))}>
+            Next
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

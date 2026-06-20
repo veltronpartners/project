@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { createArticle, updateArticle, type FormState } from "@/app/(portal)/kb/actions";
 import type { KbArticle } from "@/types";
@@ -53,9 +54,14 @@ export function ArticleForm({ article }: { article?: KbArticle }) {
 
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
 
-      <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : article ? "Save changes" : "Publish article"}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={pending}>
+          {pending ? "Saving…" : article ? "Save changes" : "Publish article"}
+        </Button>
+        <Button asChild type="button" variant="outline">
+          <Link href={article ? `/kb/${article.id}` : "/kb"}>Cancel</Link>
+        </Button>
+      </div>
     </form>
   );
 }

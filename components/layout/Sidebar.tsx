@@ -90,7 +90,7 @@ export function Sidebar({ role }: { role: Role }) {
   return (
     <aside
       className={cn(
-        "hidden flex-col bg-sidebar text-sidebar-foreground transition-all duration-200 md:flex",
+        "sticky top-0 hidden h-screen flex-col bg-sidebar text-sidebar-foreground transition-all duration-200 md:flex",
         collapsed ? "w-16" : "w-[260px]",
         !mounted && "duration-0",
       )}
@@ -102,7 +102,7 @@ export function Sidebar({ role }: { role: Role }) {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-2">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
         {items.map(({ label, href, icon: Icon }) =>
           collapsed ? (
             <Tooltip key={href} delayDuration={200}>
@@ -162,7 +162,7 @@ export function MobileNav({ role }: { role: Role }) {
             <span className="font-display text-lg font-bold">Veltron</span>
           </SheetTitle>
         </SheetHeader>
-        <nav className="flex-1 space-y-1 px-3 py-2">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
           {items.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
