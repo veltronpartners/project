@@ -20,7 +20,7 @@ export default async function BudgetsPage() {
     <div className="space-y-6">
       <h1 className="font-heading text-2xl font-semibold">Budgets</h1>
 
-      <BudgetForm />
+      {(isDirector(user.role) || user.role === "finance_officer") && <BudgetForm />}
 
       {rows.length === 0 ? (
         <EmptyState message="No budget periods yet." />

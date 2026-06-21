@@ -4,7 +4,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 const STAFF_2FA_COOKIE = "veltron-2fa";
 const PARTNER_2FA_COOKIE = "veltron-partner-2fa";
 
-const STAFF_PUBLIC_PATHS = ["/login", "/forgot-password", "/onboard"];
+const STAFF_PUBLIC_PATHS = ["/login", "/forgot-password"];
 const TFA_PATHS = ["/2fa-setup", "/2fa-verify"];
 
 function isPublicAsset(pathname: string) {
